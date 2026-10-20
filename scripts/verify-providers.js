@@ -181,7 +181,7 @@ const STANDARD_BODY = {
   max_tokens: 8,
 };
 
-async function callStandard(baseUrl, modelId, bearerToken) {
+function callStandard(baseUrl, modelId, bearerToken) {
   const u = parseUrl(baseUrl);
   if (!u) return { status: 0, body: 'invalid baseUrl', error: new Error('invalid URL') };
   const fullPath = u.pathname.replace(/\/$/, '') + '/chat/completions';
@@ -194,7 +194,7 @@ async function callStandard(baseUrl, modelId, bearerToken) {
   }, { ...STANDARD_BODY, model: modelId });
 }
 
-async function callGemini(baseUrl, modelId, apiKey) {
+function callGemini(baseUrl, modelId, apiKey) {
   // OpenAI-compat path is baseUrl + /openai/chat/completions
   const u = parseUrl(baseUrl);
   if (!u) return { status: 0, body: 'invalid baseUrl' };
@@ -207,7 +207,7 @@ async function callGemini(baseUrl, modelId, apiKey) {
   }, { ...STANDARD_BODY, model: modelId });
 }
 
-async function callCohere(baseUrl, modelId, apiKey) {
+function callCohere(baseUrl, modelId, apiKey) {
   const u = parseUrl(baseUrl);
   if (!u) return { status: 0, body: 'invalid baseUrl' };
   const fullPath = u.pathname.replace(/\/$/, '') + '/chat';
@@ -222,7 +222,7 @@ async function callCohere(baseUrl, modelId, apiKey) {
   });
 }
 
-async function callCloudflare(baseUrl, modelId, token, accountId) {
+function callCloudflare(baseUrl, modelId, token, accountId) {
   if (!accountId) return { status: 0, body: 'missing CF_ACCOUNT_ID', _skipped: true };
   const resolvedUrl = baseUrl.replace('{account_id}', accountId);
   const u = parseUrl(resolvedUrl);
@@ -240,7 +240,7 @@ async function callCloudflare(baseUrl, modelId, token, accountId) {
   });
 }
 
-async function callOllama(baseUrl, modelId, apiKey) {
+function callOllama(baseUrl, modelId, apiKey) {
   const u = parseUrl(baseUrl);
   if (!u) return { status: 0, body: 'invalid baseUrl' };
   const fullPath = '/api/chat';
@@ -275,7 +275,7 @@ async function callWithRetry(callFn, maxRetries = 3, delays = [2000, 8000, 30000
 // ---------------------------------------------------------------------------
 // Provider → key + call routing
 // ---------------------------------------------------------------------------
-function getProviderConfig(providerName, baseUrl) {
+function getProviderConfig(providerName) {
   const name = providerName.toLowerCase();
   if (name.includes('groq')) return { key: KEY.GROQ, type: 'standard' };
   if (name.includes('mistral')) return { key: KEY.MISTRAL, type: 'standard' };
@@ -299,7 +299,7 @@ function getProviderConfig(providerName, baseUrl) {
   return { key: null, type: 'standard' };
 }
 
-async function callModel(providerName, baseUrl, modelId, cfg) {
+function callModel(providerName, baseUrl, modelId, cfg) {
   const { key, type, accountId, keyless } = cfg;
 
   // Cloudflare: needs both token AND account_id; missing either → SKIPPED
@@ -317,7 +317,7 @@ async function callModel(providerName, baseUrl, modelId, cfg) {
     return { status: 0, body: 'no key configured', _skipped: true };
   }
 
-  const callFn = async () => {
+  const callFn = () => {
     if (type === 'gemini') return callGemini(baseUrl, modelId, key);
     if (type === 'cohere') return callCohere(baseUrl, modelId, key);
     if (type === 'cloudflare') return callCloudflare(baseUrl, modelId, key, accountId);
@@ -509,7 +509,6 @@ async function runSelfTest() {
 
   // 1. Test against a known-good provider (LLM7.io, keyless)
   console.log('Self-test 1: LLM7.io keyless call with gpt-4o-mini ...');
-  const startMs = Date.now();
   const res1 = await callStandard('https://api.llm7.io/v1', 'gpt-4o-mini', null);
   const parsed1 = parseCompletion(res1.body || '');
   const v1 = verdict(res1.status, res1.body || '', parsed1);

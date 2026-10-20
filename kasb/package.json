@@ -1,0 +1,11 @@
+{
+  "name": "kasb-co",
+  "version": "1.0.0",
+  "description": "Kasb Co. — an autonomous company whose AI employees find and run money-making opportunities in the Middle East, 24/7.",
+  "type": "module",
+  "private": true,
+  "scripts": {
+    "start": "node server.js",
+    "test": "node --test test/"
+  }
+}
